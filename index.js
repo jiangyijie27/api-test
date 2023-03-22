@@ -194,6 +194,10 @@ app.get("/wxad-search-ai", async (req, res) => {
   }
 })
 
+app.get("/", (res) => {
+  res.send("Aragakey")
+})
+
 app.listen(8080, () => {
   console.log("Server listening on port 8080")
 })
