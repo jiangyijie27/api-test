@@ -58,7 +58,7 @@ const getText = ({ value: v, divider }) => {
   }
 }
 
-const constrainArticleToTokenLength = ({ article = "", maxTokens = 3300 }) => {
+const constrainArticleToTokenLength = ({ article = "", maxTokens = 3200 }) => {
   const encodedLength = encode(article).length
 
   if (encodedLength < maxTokens) {
@@ -75,6 +75,8 @@ const configuration = new Configuration({
   apiKey: process.env.API_KEY,
   basePath: "https://service-3g7rfwcq-1259062116.hk.apigw.tencentcs.com/v1",
 })
+
+
 const openai = new OpenAIApi(configuration)
 
 const app = express()
