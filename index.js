@@ -194,7 +194,7 @@ app.get("/wxad-search-ai", async (req, res) => {
   }
 })
 
-app.get("/", (res) => {
+app.get("/", (req, res) => {
   res.send("Aragakey")
 })
 
