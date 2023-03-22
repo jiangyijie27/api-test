@@ -4,6 +4,8 @@ const { Configuration, OpenAIApi } = require("openai")
 const cors = require("cors")
 const { encode, decode } = require("gpt-3-encoder")
 
+const dataSource = require("./dataSource")
+
 const getTextFromContentObject = ({ o, divider = "" }) => {
   if (o.type === "link") {
     return o.attrs.text
@@ -104,31 +106,38 @@ app.get("/wxad-search-ai", async (req, res) => {
   console.log("yijie ids:", ids)
   // ids = [270,190,258]
   try {
-    const promises = ids.map((id) => {
-      return axios.get(
-        `https://ad.weixin.qq.com/designapi/v1/wxad/pages?cate_id=${id}`
-      )
-    })
-    const results = await Promise.all(promises)
-    const articles = results
-      .map((o) => {
-        const data = getText({
-          value: JSON.parse(o.data.data[0].release_data).content[0].value,
-          divider: "\n",
-        })
-        if (data.type === "text") {
-          return data.value
-        }
-        if (data.type === "branch") {
-          return data.content
-            .map((p) => {
-              return p.value.value
-            })
-            .join("\n")
-        }
-        return ""
+    // const promises = ids.map((id) => {
+    //   return axios.get(
+    //     `https://ad.weixin.qq.com/designapi/v1/wxad/pages?cate_id=${id}`
+    //   )
+    // })
+    // const results = await Promise.all(promises)
+
+    // const articles = results
+    //   .map((o) => {
+    //     const data = getText({
+    //       value: JSON.parse(o.data.data[0].release_data).content[0].value,
+    //       divider: "\n",
+    //     })
+    //     if (data.type === "text") {
+    //       return data.value
+    //     }
+    //     if (data.type === "branch") {
+    //       return data.content
+    //         .map((p) => {
+    //           return p.value.value
+    //         })
+    //         .join("\n")
+    //     }
+    //     return ""
+    //   })
+    //   .join("\n\n")
+
+    const articles = ids
+      .map((id) => {
+        return dataSource[id]
       })
-      .join("\n\n")
+      .join("\n")
 
     const finalArticle = constrainArticleToTokenLength({
       article: articles,
