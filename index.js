@@ -79,17 +79,20 @@ const openai = new OpenAIApi(configuration)
 
 const app = express()
 
-app.use(
-  cors({
-    origin: "*",
-  })
-)
+// app.use(
+//   cors({
+//     origin: "*",
+//   })
+// )
+
+app.use(function (req, res, next) {
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  next()
+})
 
 // 获取 Access Token
 // https://docs.qq.com/open/document/app/oauth2/access_token.html
 app.get("/wxad-search-ai", async (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*")
-
   const {
     question,
     cate_ids = "[]",
