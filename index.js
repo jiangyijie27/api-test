@@ -56,7 +56,7 @@ const getText = ({ value: v, divider }) => {
   }
 }
 
-const constrainArticleToTokenLength = ({ article = "", maxTokens = 3700 }) => {
+const constrainArticleToTokenLength = ({ article = "", maxTokens = 3300 }) => {
   const encodedLength = encode(article).length
 
   if (encodedLength < maxTokens) {
@@ -70,7 +70,7 @@ const constrainArticleToTokenLength = ({ article = "", maxTokens = 3700 }) => {
 }
 
 const configuration = new Configuration({
-  // apiKey: process.env.API_KEY,
+  apiKey: process.env.API_KEY,
   basePath: "https://service-3g7rfwcq-1259062116.hk.apigw.tencentcs.com/v1",
 })
 const openai = new OpenAIApi(configuration)
@@ -91,7 +91,7 @@ app.get("/wxad-search-ai", async (req, res) => {
     cate_ids = "[]",
     prompt = "",
     temperature = 0,
-    max_tokens = 100,
+    max_tokens = 512,
     top_p = 1.0,
     frequency_penalty = 0.0,
     presence_penalty = 0.0,
@@ -110,68 +110,29 @@ app.get("/wxad-search-ai", async (req, res) => {
       )
     })
     const results = await Promise.all(promises)
+    const articles = results
+      .map((o) => {
+        const data = getText({
+          value: JSON.parse(o.data.data[0].release_data).content[0].value,
+          divider: "\n",
+        })
+        if (data.type === "text") {
+          return data.value
+        }
+        if (data.type === "branch") {
+          return data.content
+            .map((p) => {
+              return p.value.value
+            })
+            .join("\n")
+        }
+        return ""
+      })
+      .join("\n\n")
 
-    console.log("yijie 取得结果：", JSON.parse(results[0].data.data[0].release_data))
-
-    // const articles = results
-    //   .map((o) => {
-    //     const data = getText({
-    //       value: JSON.parse(o.data.data[0].release_data).content[0].value,
-    //       divider: "\n",
-    //     })
-    //     if (data.type === "text") {
-    //       return data.value
-    //     }
-    //     if (data.type === "branch") {
-    //       return data.content
-    //         .map((p) => {
-    //           return p.value.value
-    //         })
-    //         .join("\n")
-    //     }
-    //     return ""
-    //   })
-    //   .join("\n\n")
-
-    // const finalArticle = constrainArticleToTokenLength({
-    //   article: articlesMock,
-    // })
-
-    // const res0 = await axios.get(
-    //   `https://ad.weixin.qq.com/designapi/v1/wxad/pages?cate_id=${ids[0]}`
-    // )
-
-    // Promise all 会报错，但分开请求不会？？
-    // axios
-    //   .get(`https://ad.weixin.qq.com/designapi/v1/wxad/pages?cate_id=${ids[0]}`)
-    //   .then((res) => {
-    //     const { page_title, release_data } = res.data.data[0]
-    //     articles.push({
-    //       page_title,
-    //       release_data,
-    //     })
-
-    //     console.log("yijie", articles)
-
-    //     const responseData = {
-    //       id: "cmpl-6wNGFFHAhFmvVF4K9aEaZcfnwneUR-test",
-    //       object: "text_completion",
-    //       created: 1679370459,
-    //       model: "text-davinci-003",
-    //       choices: [
-    //         {
-    //           text: "\n\n马斯克是一位美国企业家、投资家和发明家，他是特斯拉汽",
-    //           index: 0,
-    //           logprobs: null,
-    //           finish_reason: "length",
-    //         },
-    //       ],
-    //       usage: { prompt_tokens: 17, completion_tokens: 58, total_tokens: 75 },
-    //     }
-    //     response.send(responseData)
-    //   })
-
-    // console.log("yijie", res0)
+    const finalArticle = constrainArticleToTokenLength({
+      article: articles,
+    })
 
     // const response = {
     //   data: {
@@ -191,30 +152,35 @@ app.get("/wxad-search-ai", async (req, res) => {
     //   },
     // }
 
-    // const response = await openai.createCompletion({
-    //   model: "text-davinci-003",
-    //   prompt: `
-    //     你要扮演一个微信广告智能客服。你是热心、专业、友好的。
-    //     现有用户来咨询问题，我会提供给你[参考内容]，你需要根据且仅根据[参考内容]回答问题，你只需要直接回复答案即可，不要在回答中添加任何多余的空格和换行。
-    //     如果仅根据[参考内容]，你无法作答、或不确定。请直接回复：“yijie 让你换个问题”。
+    const response = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt: `
+        你要扮演一个微信广告智能客服。你是热心、专业、友好的。
+        现有用户来咨询问题，我会提供给你[参考内容]，你需要根据且仅根据[参考内容]回答问题，你只需要直接回复答案即可。
+        如果仅根据[参考内容]，你无法作答、或不确定。请直接回复：“yijie 让你换个问题”。
 
-    //     [参考内容]：
-    //     ${articles}
+        [参考内容]：
+        ${finalArticle}
 
-    //     问：${question}？
-    //     答：
-    //   `,
-    //   temperature,
-    //   max_tokens,
-    //   top_p,
-    //   frequency_penalty,
-    //   presence_penalty,
-    // })
+        问：${question}？
+        答：
+      `,
+      temperature,
+      max_tokens,
+      top_p,
+      frequency_penalty,
+      presence_penalty,
+    })
 
-    // console.log("yijie", response.data)
-    // res.send(response.data)
+    console.log("yijie", response.data)
+    res.send(response.data)
   } catch (error) {
-    console.log("yijie error", error)
+    console.log(
+      "yijie error",
+      error,
+      error.response,
+      error.response?.data?.error
+    )
     res.status(500).send(error.message)
   }
 })
