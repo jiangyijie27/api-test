@@ -71,7 +71,6 @@ const constrainArticleToTokenLength = ({ article = "", maxTokens = 3700 }) => {
 
 const configuration = new Configuration({
   // apiKey: process.env.API_KEY,
-  // apiKey: "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",
   basePath: "https://service-3g7rfwcq-1259062116.hk.apigw.tencentcs.com/v1",
 })
 const openai = new OpenAIApi(configuration)
