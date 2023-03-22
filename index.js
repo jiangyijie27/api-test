@@ -88,6 +88,8 @@ app.use(
 // 获取 Access Token
 // https://docs.qq.com/open/document/app/oauth2/access_token.html
 app.get("/wxad-search-ai", async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*")
+
   const {
     question,
     cate_ids = "[]",
